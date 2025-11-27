@@ -57,3 +57,37 @@ def test_log_output_format_and_fields(mock_gethostname):
 
     finally:
         logger.shutdown()
+
+
+def test_custom_log_format_is_applied():
+    """
+    Verifica che un formato di log personalizzato venga applicato correttamente.
+    """
+    log_output = io.StringIO()
+    test_handler = logging.StreamHandler(log_output)
+
+    # Definisci un formato custom con un campo non standard "custom_field"
+    custom_format = "%(asctime)s %(levelname)s %(message)s %(custom_field)s"
+    
+    logger = StructuraLogger(
+        handlers=[test_handler],
+        log_format=custom_format
+    )
+
+    try:
+        logger.info("test_event", "Test message", custom_field="custom_value")
+
+        logged_line = log_output.getvalue().strip()
+        log_json = json.loads(logged_line)
+
+        # Verifica che il campo custom sia presente
+        assert "custom_field" in log_json
+        assert log_json["custom_field"] == "custom_value"
+        
+        # I campi 'service' e 'worker_id' vengono aggiunti sempre dal metodo `log`,
+        # quindi dovrebbero essere presenti anche se non sono nel format string.
+        assert "service" in log_json
+        assert "worker_id" in log_json
+
+    finally:
+        logger.shutdown()

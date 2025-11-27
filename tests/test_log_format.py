@@ -68,11 +68,8 @@ def test_custom_log_format_is_applied():
 
     # Definisci un formato custom con un campo non standard "custom_field"
     custom_format = "%(asctime)s %(levelname)s %(message)s %(custom_field)s"
-    
-    logger = StructuraLogger(
-        handlers=[test_handler],
-        log_format=custom_format
-    )
+
+    logger = StructuraLogger(handlers=[test_handler], log_format=custom_format)
 
     try:
         logger.info("test_event", "Test message", custom_field="custom_value")
@@ -83,7 +80,7 @@ def test_custom_log_format_is_applied():
         # Verifica che il campo custom sia presente
         assert "custom_field" in log_json
         assert log_json["custom_field"] == "custom_value"
-        
+
         # I campi 'service' e 'worker_id' vengono aggiunti sempre dal metodo `log`,
         # quindi dovrebbero essere presenti anche se non sono nel format string.
         assert "service" in log_json

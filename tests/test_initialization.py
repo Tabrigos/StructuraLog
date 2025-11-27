@@ -75,16 +75,16 @@ def test_default_values_are_used_when_no_args_or_env_vars(string_io_handler):
     quando non vengono forniti né argomenti né variabili d'ambiente.
     """
     handler, log_output = string_io_handler
-    
+
     # Assicurati che le variabili d'ambiente siano pulite
     with patch.dict(os.environ, {}, clear=True):
         with patch("socket.gethostname", return_value="test-hostname") as mock_hostname:
             logger = StructuraLogger(handlers=[handler])
-            
+
             assert logger.service_name == "my-service"
             assert logger.worker_id == "test-hostname"
             mock_hostname.assert_called_once()
-            
+
             # Esegui un log per verificare i valori di default nell'output
             logger.info("test_event", "Test message")
 

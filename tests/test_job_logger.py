@@ -146,3 +146,24 @@ def test_job_logger_custom_job_trace_id(mock_gethostname, test_logger):
     assert completed_log["trace_id"] == custom_trace_id
     assert completed_log["service"] == "test-job-service"
     assert "duration_ms" in completed_log
+
+
+def test_job_logger_set_final_data_on_failure(test_logger):
+    """
+    Verifica che i dati da `set_final_data` non vengano aggiunti al log
+    quando un job fallisce.
+    """
+    logger, log_output = test_logger
+
+    with pytest.raises(RuntimeError):
+        with JobLogger(logger, event="failing_job_with_data") as job:
+            job.set_final_data({"should_not_be_logged": True})
+            raise RuntimeError("This job failed as expected")
+
+    logged_lines = log_output.getvalue().strip().split("\n")
+    assert len(logged_lines) == 2  # job_started, job_failed
+
+    failed_log = json.loads(logged_lines[1])
+    assert failed_log["event"] == "job_failed"
+    assert failed_log["status"] == "failed"
+    assert "should_not_be_logged" not in failed_log

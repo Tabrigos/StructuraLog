@@ -94,3 +94,26 @@ def test_default_values_are_used_when_no_args_or_env_vars(string_io_handler):
     assert log_json["service"] == "my-service"
     assert log_json["worker_id"] == "test-hostname"
 
+
+def test_shutdown_is_idempotent():
+    """
+    Verifica che chiamare shutdown() più volte non causi errori.
+    """
+    # Usa il logger di default (asincrono)
+    logger = StructuraLogger()
+    try:
+        logger.shutdown()
+        logger.shutdown()
+        # La seconda chiamata non deve sollevare eccezioni
+    except Exception as e:
+        pytest.fail(f"La seconda chiamata a shutdown() ha sollevato un'eccezione: {e}")
+
+    # Test anche con un logger sincrono (con handler custom)
+    logger_sync = StructuraLogger(handlers=[logging.NullHandler()])
+    try:
+        logger_sync.shutdown()
+        logger_sync.shutdown()
+    except Exception as e:
+        pytest.fail(
+            f"La seconda chiamata a shutdown() su un logger sincrono ha sollevato un'eccezione: {e}"
+        )

@@ -75,3 +75,35 @@ def test_heartbeat_emits_logs(mock_gethostname, test_logger_with_output):
     assert heartbeat_log["status"] == "healthy"
     assert heartbeat_log["message"] == "Worker alive"
     assert heartbeat_log["service"] == "test-heartbeat-service"
+
+
+def test_logging_to_file(tmp_path):
+    """
+    Verifica che il logger scriva correttamente su file quando configurato per farlo.
+    """
+    log_file = tmp_path / "test.log"
+
+    # 1. Inizializza il logger per scrivere su file
+    logger = StructuraLogger(
+        service_name="file-logger",
+        destination="file",
+        log_file_path=str(log_file),
+    )
+
+    # 2. Scrivi un messaggio di log
+    logger.info("file_test", "Questo è un test su file.")
+
+    # 3. Chiudi il logger per assicurarti che il buffer venga scritto
+    logger.shutdown()
+
+    # 4. Leggi il file e verifica il contenuto
+    with open(log_file, "r") as f:
+        log_content = f.read().strip()
+
+    assert log_content
+    log_data = json.loads(log_content)
+
+    assert log_data["event"] == "file_test"
+    assert log_data["message"] == "Questo è un test su file."
+    assert log_data["service"] == "file-logger"
+    assert log_data["status"] == "info"

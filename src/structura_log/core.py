@@ -20,6 +20,8 @@ class StructuraLogger:
         worker_id: str = None,
         log_level: str = "INFO",
         log_format: str = "%(asctime)s %(levelname)s %(message)s %(service)s %(worker_id)s %(job_id)s %(event)s %(status)s %(trace_id)s",
+        destination: str = "stdout",
+        log_file_path: str | None = None,
         handlers: list[logging.Handler] | None = None,
     ):
         """
@@ -65,7 +67,18 @@ class StructuraLogger:
             self._queue_handler = QueueHandler(self._log_queue)
             self.logger.addHandler(self._queue_handler)
 
-            _handler = logging.StreamHandler(sys.stdout)
+            # Scegli l'handler di output in base alla destinazione
+            if destination == "stdout":
+                _handler = logging.StreamHandler(sys.stdout)
+            elif destination == "file":
+                if not log_file_path:
+                    raise ValueError(
+                        "log_file_path must be provided when destination is 'file'"
+                    )
+                _handler = logging.FileHandler(log_file_path)
+            else:
+                raise ValueError(f"Unknown destination: {destination}")
+
             _handler.setFormatter(_formatter)
             self._queue_listener = QueueListener(self._log_queue, _handler)
             self._queue_listener.start()
